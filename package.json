@@ -1,0 +1,14 @@
+{
+  "name": "sidechick",
+  "version": "1.0.0",
+  "description": "The research partner your supervisor doesn't know about.",
+  "main": "sidechick.js",
+  "type": "module",
+  "scripts": {
+    "start": "node sidechick.js"
+  },
+  "dependencies": {
+    "@anthropic-ai/sdk": "^0.79.0",
+    "dotenv": "^17.3.1"
+  }
+}

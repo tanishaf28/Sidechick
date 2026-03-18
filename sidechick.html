@@ -1,0 +1,874 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>SIDECHICK</title>
+<link href="https://fonts.googleapis.com/css2?family=Playfair+Display:ital,wght@0,700;0,900;1,400;1,700&family=Space+Mono:ital,wght@0,400;0,700;1,400&display=swap" rel="stylesheet">
+<style>
+  *, *::before, *::after { box-sizing: border-box; margin: 0; padding: 0; }
+
+  :root {
+    --red: #C8102E;
+    --red2: #8B0A1F;
+    --red3: #FF2244;
+    --cream: #F5EDD8;
+    --cream2: #EDE0C4;
+    --ink: #120808;
+    --ink2: #2A1010;
+    --gold: #C9922A;
+    --gold2: #E8B84B;
+    --smoke: #9E8070;
+    --smoke2: #7A6055;
+    --green: #1A7A3C;
+    --green2: #0D4D25;
+  }
+
+  body {
+    background: var(--ink);
+    color: var(--cream);
+    font-family: 'Space Mono', monospace;
+    min-height: 100vh;
+    overflow-x: hidden;
+  }
+
+  /* SCANLINE OVERLAY */
+  body::before {
+    content: '';
+    position: fixed;
+    inset: 0;
+    background: repeating-linear-gradient(0deg, transparent, transparent 2px, rgba(0,0,0,0.03) 2px, rgba(0,0,0,0.03) 4px);
+    pointer-events: none;
+    z-index: 999;
+  }
+
+  /* HEADER */
+  header {
+    border-bottom: 1px solid rgba(200,16,46,0.3);
+    padding: 20px 32px;
+    display: flex;
+    align-items: center;
+    justify-content: space-between;
+    position: sticky;
+    top: 0;
+    background: var(--ink);
+    z-index: 100;
+  }
+
+  .logo {
+    font-family: 'Playfair Display', serif;
+    font-size: 26px;
+    font-weight: 900;
+    font-style: italic;
+    color: var(--red);
+    letter-spacing: -0.02em;
+    text-shadow: 0 0 40px rgba(200,16,46,0.4);
+  }
+
+  .logo sup {
+    font-size: 10px;
+    font-style: normal;
+    color: var(--smoke);
+    font-family: 'Space Mono', monospace;
+    letter-spacing: 0.1em;
+  }
+
+  .status-dot {
+    width: 8px; height: 8px;
+    border-radius: 50%;
+    background: var(--green);
+    box-shadow: 0 0 8px var(--green);
+    animation: pulse 2s ease-in-out infinite;
+    display: inline-block;
+    margin-right: 8px;
+  }
+
+  .status-dot.offline { background: var(--smoke); box-shadow: none; animation: none; }
+  .status-dot.loading { background: var(--gold); box-shadow: 0 0 8px var(--gold); }
+
+  @keyframes pulse { 0%,100%{opacity:1} 50%{opacity:0.4} }
+
+  .header-right {
+    display: flex;
+    align-items: center;
+    gap: 20px;
+    font-size: 10px;
+    color: var(--smoke);
+    letter-spacing: 0.12em;
+  }
+
+  .notion-status {
+    display: flex;
+    align-items: center;
+    gap: 6px;
+    font-size: 10px;
+    letter-spacing: 0.1em;
+  }
+
+  /* MAIN LAYOUT */
+  main {
+    display: grid;
+    grid-template-columns: 1fr 420px;
+    min-height: calc(100vh - 65px);
+  }
+
+  /* LEFT — DUMP ZONE */
+  .dump-zone {
+    padding: 40px 36px;
+    border-right: 1px solid rgba(200,16,46,0.15);
+    display: flex;
+    flex-direction: column;
+    gap: 24px;
+  }
+
+  .zone-label {
+    font-size: 9px;
+    letter-spacing: 0.4em;
+    color: var(--red);
+    text-transform: uppercase;
+  }
+
+  .dump-title {
+    font-family: 'Playfair Display', serif;
+    font-size: 42px;
+    font-weight: 900;
+    font-style: italic;
+    line-height: 1;
+    color: var(--cream);
+    letter-spacing: -0.02em;
+  }
+
+  .dump-title span { color: var(--red); }
+
+  .dump-subtitle {
+    font-size: 11px;
+    color: var(--smoke);
+    line-height: 1.7;
+    max-width: 480px;
+  }
+
+  .dump-box {
+    position: relative;
+    flex: 1;
+    min-height: 240px;
+  }
+
+  textarea {
+    width: 100%;
+    height: 100%;
+    min-height: 240px;
+    background: rgba(200,16,46,0.04);
+    border: 1px solid rgba(200,16,46,0.2);
+    border-radius: 4px;
+    color: var(--cream);
+    font-family: 'Space Mono', monospace;
+    font-size: 13px;
+    line-height: 1.8;
+    padding: 20px;
+    resize: vertical;
+    outline: none;
+    transition: border-color 0.2s, background 0.2s;
+    caret-color: var(--red);
+  }
+
+  textarea::placeholder { color: var(--smoke2); font-style: italic; }
+  textarea:focus { border-color: rgba(200,16,46,0.5); background: rgba(200,16,46,0.07); }
+
+  .char-count {
+    position: absolute;
+    bottom: 12px;
+    right: 12px;
+    font-size: 10px;
+    color: var(--smoke2);
+    pointer-events: none;
+  }
+
+  .type-pills {
+    display: flex;
+    gap: 8px;
+    flex-wrap: wrap;
+  }
+
+  .pill {
+    border: 1px solid rgba(200,16,46,0.25);
+    border-radius: 2px;
+    padding: 6px 14px;
+    font-size: 10px;
+    letter-spacing: 0.12em;
+    color: var(--smoke);
+    cursor: pointer;
+    transition: all 0.15s;
+    background: transparent;
+    text-transform: uppercase;
+  }
+
+  .pill:hover, .pill.active {
+    border-color: var(--red);
+    color: var(--cream);
+    background: rgba(200,16,46,0.15);
+  }
+
+  .pill.active { color: var(--red); }
+
+  .dump-btn {
+    align-self: flex-start;
+    background: var(--red);
+    color: #fff;
+    border: none;
+    border-radius: 3px;
+    padding: 14px 36px;
+    font-family: 'Space Mono', monospace;
+    font-size: 11px;
+    letter-spacing: 0.2em;
+    text-transform: uppercase;
+    cursor: pointer;
+    transition: background 0.2s, transform 0.1s, box-shadow 0.2s;
+    position: relative;
+    overflow: hidden;
+  }
+
+  .dump-btn:hover { background: var(--red2); transform: translateY(-1px); box-shadow: 0 4px 20px rgba(200,16,46,0.4); }
+  .dump-btn:active { transform: translateY(0); }
+  .dump-btn:disabled { background: var(--smoke2); cursor: not-allowed; transform: none; box-shadow: none; }
+
+  .dump-btn .btn-text { position: relative; z-index: 1; }
+
+  .btn-shimmer {
+    position: absolute;
+    top: 0; left: -100%;
+    width: 100%; height: 100%;
+    background: linear-gradient(90deg, transparent, rgba(255,255,255,0.15), transparent);
+    animation: shimmer 1.5s ease infinite;
+  }
+
+  @keyframes shimmer { to { left: 100%; } }
+
+  /* RIGHT — FEED */
+  .feed {
+    padding: 32px 28px;
+    display: flex;
+    flex-direction: column;
+    gap: 0;
+    overflow-y: auto;
+    max-height: calc(100vh - 65px);
+  }
+
+  .feed-header {
+    display: flex;
+    align-items: center;
+    justify-content: space-between;
+    margin-bottom: 24px;
+    padding-bottom: 16px;
+    border-bottom: 1px solid rgba(200,16,46,0.15);
+  }
+
+  .feed-title {
+    font-size: 9px;
+    letter-spacing: 0.4em;
+    color: var(--red);
+    text-transform: uppercase;
+  }
+
+  .feed-count {
+    font-size: 10px;
+    color: var(--smoke);
+  }
+
+  /* PROCESSING CARD */
+  .processing-card {
+    background: rgba(200,16,46,0.06);
+    border: 1px solid rgba(200,16,46,0.25);
+    border-radius: 4px;
+    padding: 20px;
+    margin-bottom: 16px;
+    animation: fadeInDown 0.3s ease;
+  }
+
+  @keyframes fadeInDown {
+    from { opacity: 0; transform: translateY(-10px); }
+    to   { opacity: 1; transform: translateY(0); }
+  }
+
+  .processing-label {
+    font-size: 9px;
+    letter-spacing: 0.3em;
+    color: var(--red);
+    text-transform: uppercase;
+    margin-bottom: 10px;
+    display: flex;
+    align-items: center;
+    gap: 8px;
+  }
+
+  .spinner {
+    width: 10px; height: 10px;
+    border: 1.5px solid rgba(200,16,46,0.3);
+    border-top-color: var(--red);
+    border-radius: 50%;
+    animation: spin 0.7s linear infinite;
+    display: inline-block;
+  }
+
+  @keyframes spin { to { transform: rotate(360deg); } }
+
+  .processing-text {
+    font-size: 11px;
+    color: var(--smoke);
+    font-style: italic;
+    line-height: 1.6;
+    white-space: pre-wrap;
+    word-break: break-word;
+  }
+
+  /* RESULT CARD */
+  .result-card {
+    background: rgba(18, 8, 8, 0.8);
+    border: 1px solid rgba(200,16,46,0.2);
+    border-left: 3px solid var(--red);
+    border-radius: 4px;
+    padding: 20px;
+    margin-bottom: 12px;
+    animation: fadeInDown 0.4s ease;
+    transition: border-color 0.2s;
+  }
+
+  .result-card:hover { border-color: rgba(200,16,46,0.5); }
+  .result-card.success { border-left-color: var(--green); }
+  .result-card.error { border-left-color: var(--gold); }
+
+  .result-type-badge {
+    display: inline-block;
+    font-size: 9px;
+    letter-spacing: 0.2em;
+    padding: 3px 8px;
+    border-radius: 2px;
+    text-transform: uppercase;
+    margin-bottom: 10px;
+    background: rgba(200,16,46,0.15);
+    color: var(--red);
+    border: 1px solid rgba(200,16,46,0.25);
+  }
+
+  .result-title {
+    font-family: 'Playfair Display', serif;
+    font-size: 15px;
+    font-weight: 700;
+    color: var(--cream);
+    margin-bottom: 8px;
+    line-height: 1.3;
+  }
+
+  .result-summary {
+    font-size: 11px;
+    color: var(--smoke);
+    line-height: 1.7;
+    margin-bottom: 12px;
+  }
+
+  .result-tags {
+    display: flex;
+    flex-wrap: wrap;
+    gap: 6px;
+    margin-bottom: 12px;
+  }
+
+  .tag {
+    font-size: 9px;
+    letter-spacing: 0.1em;
+    padding: 2px 8px;
+    border-radius: 2px;
+    background: rgba(201,146,42,0.1);
+    color: var(--gold2);
+    border: 1px solid rgba(201,146,42,0.2);
+  }
+
+  .result-insights {
+    margin-bottom: 12px;
+  }
+
+  .insights-label {
+    font-size: 9px;
+    letter-spacing: 0.25em;
+    color: var(--smoke2);
+    text-transform: uppercase;
+    margin-bottom: 6px;
+  }
+
+  .insight-item {
+    font-size: 10px;
+    color: var(--smoke);
+    line-height: 1.6;
+    padding-left: 12px;
+    position: relative;
+    margin-bottom: 3px;
+  }
+
+  .insight-item::before {
+    content: '·';
+    position: absolute;
+    left: 0;
+    color: var(--red);
+  }
+
+  .notion-link {
+    display: inline-flex;
+    align-items: center;
+    gap: 6px;
+    font-size: 10px;
+    color: var(--green);
+    text-decoration: none;
+    letter-spacing: 0.08em;
+    padding: 6px 12px;
+    border: 1px solid rgba(26,122,60,0.3);
+    border-radius: 2px;
+    transition: all 0.15s;
+    margin-top: 4px;
+  }
+
+  .notion-link:hover { background: rgba(26,122,60,0.1); border-color: rgba(26,122,60,0.6); }
+
+  .result-time {
+    font-size: 9px;
+    color: var(--smoke2);
+    margin-top: 10px;
+    opacity: 0.6;
+  }
+
+  /* ERROR STATE */
+  .error-card {
+    background: rgba(201,146,42,0.05);
+    border: 1px solid rgba(201,146,42,0.2);
+    border-left: 3px solid var(--gold);
+    border-radius: 4px;
+    padding: 16px 20px;
+    margin-bottom: 12px;
+    animation: fadeInDown 0.3s ease;
+  }
+
+  .error-label {
+    font-size: 9px;
+    letter-spacing: 0.3em;
+    color: var(--gold);
+    text-transform: uppercase;
+    margin-bottom: 6px;
+  }
+
+  .error-msg {
+    font-size: 11px;
+    color: var(--smoke);
+    line-height: 1.6;
+  }
+
+  /* EMPTY STATE */
+  .empty-state {
+    text-align: center;
+    padding: 60px 20px;
+    opacity: 0.4;
+  }
+
+  .empty-icon {
+    font-family: 'Playfair Display', serif;
+    font-size: 48px;
+    color: var(--red);
+    margin-bottom: 16px;
+    display: block;
+  }
+
+  .empty-text {
+    font-size: 11px;
+    color: var(--smoke);
+    line-height: 1.7;
+    font-style: italic;
+  }
+
+  /* CONFIG PANEL */
+  .config-section {
+    padding: 20px 36px;
+    border-top: 1px solid rgba(200,16,46,0.1);
+    background: rgba(200,16,46,0.02);
+  }
+
+  .config-row {
+    display: flex;
+    align-items: center;
+    gap: 12px;
+    margin-bottom: 10px;
+  }
+
+  .config-label {
+    font-size: 9px;
+    letter-spacing: 0.25em;
+    color: var(--smoke2);
+    text-transform: uppercase;
+    min-width: 80px;
+  }
+
+  .config-input {
+    flex: 1;
+    background: rgba(200,16,46,0.04);
+    border: 1px solid rgba(200,16,46,0.15);
+    border-radius: 3px;
+    color: var(--cream);
+    font-family: 'Space Mono', monospace;
+    font-size: 11px;
+    padding: 7px 12px;
+    outline: none;
+    transition: border-color 0.2s;
+  }
+
+  .config-input:focus { border-color: rgba(200,16,46,0.4); }
+  .config-input::placeholder { color: var(--smoke2); }
+
+  /* TICKER */
+  .ticker {
+    background: var(--red);
+    padding: 8px 0;
+    overflow: hidden;
+    white-space: nowrap;
+  }
+
+  .ticker-inner {
+    display: inline-flex;
+    animation: ticker 20s linear infinite;
+  }
+
+  .ticker-item {
+    font-size: 9px;
+    color: rgba(255,255,255,0.7);
+    letter-spacing: 0.2em;
+    text-transform: uppercase;
+    padding: 0 28px;
+  }
+
+  .ticker-item::after { content: '◆'; margin-left: 28px; color: rgba(255,255,255,0.3); }
+
+  @keyframes ticker { from{transform:translateX(0)} to{transform:translateX(-50%)} }
+
+  /* RESPONSIVE */
+  @media (max-width: 800px) {
+    main { grid-template-columns: 1fr; }
+    .feed { max-height: 500px; border-top: 1px solid rgba(200,16,46,0.15); }
+    .dump-title { font-size: 32px; }
+  }
+</style>
+</head>
+<body>
+
+<div class="ticker">
+  <div class="ticker-inner">
+    <span class="ticker-item">Dump anything</span>
+    <span class="ticker-item">Auto-files to Notion</span>
+    <span class="ticker-item">Powered by Claude AI</span>
+    <span class="ticker-item">Research intelligence</span>
+    <span class="ticker-item">Your supervisor doesn't know</span>
+    <span class="ticker-item">Dump anything</span>
+    <span class="ticker-item">Auto-files to Notion</span>
+    <span class="ticker-item">Powered by Claude AI</span>
+    <span class="ticker-item">Research intelligence</span>
+    <span class="ticker-item">Your supervisor doesn't know</span>
+  </div>
+</div>
+
+<header>
+  <div class="logo">SIDECHICK <sup>™</sup></div>
+  <div class="header-right">
+    <div class="notion-status">
+      <span class="status-dot" id="notion-dot"></span>
+      <span id="notion-status-text">Notion ready</span>
+    </div>
+    <div class="notion-status">
+      <span class="status-dot" id="claude-dot"></span>
+      <span id="claude-status-text">Claude ready</span>
+    </div>
+  </div>
+</header>
+
+<main>
+  <!-- LEFT: DUMP ZONE -->
+  <div style="display:flex;flex-direction:column;">
+    <div class="dump-zone">
+      <p class="zone-label">◆ Dump Zone</p>
+      <h1 class="dump-title">Drop <span>anything.</span><br>It files everything.</h1>
+      <p class="dump-subtitle">Paper abstract, random idea, email from your prof, YouTube URL, 2am thought. SIDECHICK reads it, analyses it, and files it to Notion perfectly structured.</p>
+
+      <div>
+        <p class="zone-label" style="margin-bottom:10px;">Force type (optional)</p>
+        <div class="type-pills">
+          <button class="pill" onclick="togglePill(this,'Paper')">Paper</button>
+          <button class="pill" onclick="togglePill(this,'Idea')">Idea</button>
+          <button class="pill" onclick="togglePill(this,'URL')">URL</button>
+          <button class="pill" onclick="togglePill(this,'Note')">Note</button>
+          <button class="pill" onclick="togglePill(this,'Email')">Email</button>
+        </div>
+      </div>
+
+      <div class="dump-box">
+        <textarea id="dump-input" placeholder="Paste anything here...&#10;&#10;Paper abstract, a random idea, a URL, an email, a voice note transcript, a tweet thread... anything research-related.&#10;&#10;SIDECHICK will figure it out." oninput="updateCount()"></textarea>
+        <span class="char-count" id="char-count">0 chars</span>
+      </div>
+
+      <button class="dump-btn" id="dump-btn" onclick="processDump()">
+        <div class="btn-shimmer"></div>
+        <span class="btn-text">◆ PROCESS DUMP</span>
+      </button>
+    </div>
+
+    <!-- CONFIG -->
+    <div class="config-section">
+      <p class="zone-label" style="margin-bottom:14px;">◆ Notion Config</p>
+      <div class="config-row">
+        <span class="config-label">API Key</span>
+        <input type="password" class="config-input" id="notion-key" placeholder="ntn_..." value="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">
+      </div>
+      <div class="config-row">
+        <span class="config-label">Database ID</span>
+        <input type="text" class="config-input" id="notion-db" placeholder="760f6795..." value="760f6795cbbe4493bc032065302b7ce2">
+      </div>
+    </div>
+  </div>
+
+  <!-- RIGHT: FEED -->
+  <div class="feed" id="feed">
+    <div class="feed-header">
+      <span class="feed-title">◆ Intelligence Feed</span>
+      <span class="feed-count" id="feed-count">0 entries</span>
+    </div>
+    <div id="feed-items">
+      <div class="empty-state">
+        <span class="empty-icon">✦</span>
+        <p class="empty-text">Your dumps will appear here,<br>analysed and filed.</p>
+      </div>
+    </div>
+  </div>
+</main>
+
+<script>
+  let forcedType = null;
+  let entryCount = 0;
+
+  function togglePill(el, type) {
+    document.querySelectorAll('.pill').forEach(p => p.classList.remove('active'));
+    if (forcedType === type) {
+      forcedType = null;
+    } else {
+      forcedType = type;
+      el.classList.add('active');
+    }
+  }
+
+  function updateCount() {
+    const len = document.getElementById('dump-input').value.length;
+    document.getElementById('char-count').textContent = len.toLocaleString() + ' chars';
+  }
+
+  function timeNow() {
+    return new Date().toLocaleTimeString([], {hour:'2-digit',minute:'2-digit'});
+  }
+
+  function addProcessingCard(text) {
+    const items = document.getElementById('feed-items');
+    const empty = items.querySelector('.empty-state');
+    if (empty) empty.remove();
+
+    const card = document.createElement('div');
+    card.className = 'processing-card';
+    card.id = 'processing-card';
+    card.innerHTML = `
+      <div class="processing-label">
+        <span class="spinner"></span>
+        SIDECHICK IS READING...
+      </div>
+      <div class="processing-text">${text.slice(0,200).replace(/</g,'&lt;')}${text.length>200?'...':''}</div>
+    `;
+    items.prepend(card);
+    return card;
+  }
+
+  function removeProcessingCard() {
+    const c = document.getElementById('processing-card');
+    if (c) c.remove();
+  }
+
+  function addResultCard(analysis, notionUrl) {
+    entryCount++;
+    document.getElementById('feed-count').textContent = entryCount + ' entr' + (entryCount===1?'y':'ies');
+
+    const items = document.getElementById('feed-items');
+    const card = document.createElement('div');
+    card.className = 'result-card success';
+    card.innerHTML = `
+      <span class="result-type-badge">${analysis.type || 'Note'}</span>
+      <div class="result-title">${(analysis.title||'Untitled').replace(/</g,'&lt;')}</div>
+      <div class="result-summary">${(analysis.summary||'').replace(/</g,'&lt;')}</div>
+      <div class="result-tags">${(analysis.tags||[]).map(t=>`<span class="tag">${t}</span>`).join('')}</div>
+      ${analysis.key_insights && analysis.key_insights.length ? `
+        <div class="result-insights">
+          <div class="insights-label">Key Insights</div>
+          ${analysis.key_insights.map(i=>`<div class="insight-item">${i.replace(/</g,'&lt;')}</div>`).join('')}
+        </div>
+      ` : ''}
+      ${notionUrl ? `<a class="notion-link" href="${notionUrl}" target="_blank">↗ View in Notion</a>` : '<span style="font-size:10px;color:var(--green);margin-top:4px;display:block;">✓ Filed to Notion</span>'}
+      <div class="result-time">${timeNow()}</div>
+    `;
+    items.prepend(card);
+  }
+
+  function addErrorCard(msg) {
+    const items = document.getElementById('feed-items');
+    const card = document.createElement('div');
+    card.className = 'error-card';
+    card.innerHTML = `
+      <div class="error-label">⚠ Error</div>
+      <div class="error-msg">${msg.replace(/</g,'&lt;')}</div>
+    `;
+    items.prepend(card);
+  }
+
+  async function callClaudeAPI(text) {
+    const prompt = `You are SIDECHICK, an elite research intelligence agent for a student/researcher. Analyse this content and extract structured intelligence.
+
+Content:
+---
+${text}
+---
+
+Respond ONLY with a valid JSON object, no markdown fences, no explanation. Use this exact structure:
+{
+  "title": "concise title max 80 chars",
+  "type": "one of: Paper, Idea, URL, Note, Email",
+  "tags": ["3 to 6 topic tags"],
+  "summary": "2-3 sentence summary of core content and why it matters",
+  "key_insights": ["up to 5 key insights"],
+  "connections": ["possible connections to other research areas"],
+  "source_url": null
+}`;
+
+    const response = await fetch("https://api.anthropic.com/v1/messages", {
+      method: "POST",
+      headers: { "Content-Type": "application/json" },
+      body: JSON.stringify({
+        model: "claude-sonnet-4-20250514",
+        max_tokens: 1000,
+        messages: [{ role: "user", content: prompt }]
+      })
+    });
+
+    const data = await response.json();
+    if (!response.ok) throw new Error(data.error?.message || JSON.stringify(data));
+
+    const rawText = data.content?.[0]?.text || '';
+    const match = rawText.match(/\{[\s\S]*\}/);
+    if (!match) throw new Error('Could not parse Claude response');
+    return JSON.parse(match[0]);
+  }
+
+  async function postToNotion(analysis, originalText) {
+    const apiKey = document.getElementById('notion-key').value.trim();
+    const dbId = document.getElementById('notion-db').value.trim().split('?')[0];
+
+    const body = {
+      parent: { database_id: dbId },
+      properties: {
+        title: { title: [{ text: { content: analysis.title || 'Untitled' } }] },
+        Type: { select: { name: analysis.type || 'Note' } },
+        Tags: { multi_select: (analysis.tags||[]).map(t => ({ name: t })) },
+        Summary: { rich_text: [{ text: { content: (analysis.summary||'').slice(0,2000) } }] },
+        "Date Added": { date: { start: new Date().toISOString().split('T')[0] } },
+        ...(analysis.source_url ? { Source: { url: analysis.source_url } } : {})
+      },
+      children: [
+        { object:"block", type:"heading_2", heading_2:{ rich_text:[{ text:{ content:"🧠 SIDECHICK Analysis" } }] } },
+        { object:"block", type:"paragraph", paragraph:{ rich_text:[{ text:{ content: analysis.summary||'' } }] } },
+        { object:"block", type:"divider", divider:{} },
+        { object:"block", type:"heading_3", heading_3:{ rich_text:[{ text:{ content:"💡 Key Insights" } }] } },
+        ...(analysis.key_insights||[]).map(i => ({
+          object:"block", type:"bulleted_list_item",
+          bulleted_list_item:{ rich_text:[{ text:{ content: i } }] }
+        })),
+        { object:"block", type:"divider", divider:{} },
+        { object:"block", type:"heading_3", heading_3:{ rich_text:[{ text:{ content:"🔗 Possible Connections" } }] } },
+        ...(analysis.connections||[]).map(c => ({
+          object:"block", type:"bulleted_list_item",
+          bulleted_list_item:{ rich_text:[{ text:{ content: c } }] }
+        })),
+        { object:"block", type:"divider", divider:{} },
+        { object:"block", type:"heading_3", heading_3:{ rich_text:[{ text:{ content:"📄 Original Dump" } }] } },
+        { object:"block", type:"quote", quote:{ rich_text:[{ text:{ content: originalText.slice(0,2000) } }] } }
+      ]
+    };
+
+    const res = await fetch('https://api.notion.com/v1/pages', {
+      method: 'POST',
+      headers: {
+        'Authorization': `Bearer ${apiKey}`,
+        'Notion-Version': '2022-06-28',
+        'Content-Type': 'application/json'
+      },
+      body: JSON.stringify(body)
+    });
+
+    const data = await res.json();
+    if (!res.ok) throw new Error(data.message || JSON.stringify(data));
+    return data.url || null;
+  }
+
+  async function processDump() {
+    const text = document.getElementById('dump-input').value.trim();
+    if (!text) return;
+
+    const btn = document.getElementById('dump-btn');
+    btn.disabled = true;
+    btn.querySelector('.btn-text').textContent = '◆ PROCESSING...';
+
+    // Update status dots
+    document.getElementById('claude-dot').className = 'status-dot loading';
+    document.getElementById('claude-status-text').textContent = 'Claude thinking...';
+
+    addProcessingCard(text);
+
+    try {
+      // Step 1: Claude analyses
+      const analysis = await callClaudeAPI(text);
+      if (forcedType) analysis.type = forcedType;
+
+      // Update status
+      document.getElementById('claude-dot').className = 'status-dot';
+      document.getElementById('claude-status-text').textContent = 'Claude ready';
+      document.getElementById('notion-dot').className = 'status-dot loading';
+      document.getElementById('notion-status-text').textContent = 'Filing to Notion...';
+
+      // Step 2: Post to Notion
+      let notionUrl = null;
+      try {
+        notionUrl = await postToNotion(analysis, text);
+      } catch (notionErr) {
+        console.warn('Notion error:', notionErr.message);
+        // Still show the analysis even if Notion fails
+      }
+
+      removeProcessingCard();
+      addResultCard(analysis, notionUrl);
+
+      document.getElementById('notion-dot').className = 'status-dot';
+      document.getElementById('notion-status-text').textContent = 'Notion ready';
+      document.getElementById('dump-input').value = '';
+      updateCount();
+
+    } catch (err) {
+      removeProcessingCard();
+      addErrorCard(err.message);
+      document.getElementById('claude-dot').className = 'status-dot';
+      document.getElementById('claude-status-text').textContent = 'Claude ready';
+    }
+
+    btn.disabled = false;
+    btn.querySelector('.btn-text').textContent = '◆ PROCESS DUMP';
+  }
+
+  // Enter shortcut: Ctrl/Cmd + Enter to submit
+  document.getElementById('dump-input').addEventListener('keydown', e => {
+    if ((e.ctrlKey || e.metaKey) && e.key === 'Enter') processDump();
+  });
+</script>
+</body>
+</html>
