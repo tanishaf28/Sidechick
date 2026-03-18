@@ -26,8 +26,8 @@ npm install
 ### 3. Set your API keys
 Edit `.env.sh` and fill in your Anthropic API key:
 ```bash
-export NOTION_API_KEY="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"
-export NOTION_DB_ID="760f6795cbbe4493bc032065302b7ce2"
+export NOTION_API_KEY="YOUR_KEY_HERE"
+export NOTION_DB_ID="YOUR_DBID_HERE"
 export ANTHROPIC_API_KEY="sk-ant-YOUR_KEY_HERE"
 ```
 
