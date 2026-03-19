@@ -797,7 +797,7 @@ Respond ONLY with a valid JSON object, no markdown fences, no explanation. Use t
       ]
     };
 
-    const res = await fetch('https://api.notion.com/v1/pages', {
+    const res = await fetch('http://localhost:3131/notion/v1/pages', {
       method: 'POST',
       headers: {
         'Authorization': `Bearer ${apiKey}`,
