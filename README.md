@@ -7,7 +7,9 @@
 [![Global Hack Week: Cloud](https://img.shields.io/badge/Global%20Hack%20Week-Cloud-1A0808?style=flat-square)](https://ghw.mlh.io)
 [![Built with Claude AI](https://img.shields.io/badge/Built%20with-Claude%20AI-C9922A?style=flat-square)](https://anthropic.com)
 [![Notion MCP](https://img.shields.io/badge/Notion-MCP%20Powered-000000?style=flat-square&logo=notion)](https://notion.so)
+[![Deployed on Vultr](https://img.shields.io/badge/Deployed%20on-Vultr-007BFC?style=flat-square&logo=vultr)](https://www.vultr.com)
 
+Vultr Deployment: Preview: https://ewr1.vultrobjects.com/sidechick.site/sidechick.html
 ---
 
 ## What It Does
